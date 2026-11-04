@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+<title>C3 tableau de bord</title>
+<style>
+  :root {
+    --ink: #eef1f5;
+    --muted: #8a93a0;
+    --faint: #4a525e;
+    --off: rgba(255, 255, 255, 0.13);
+    --glass: rgba(22, 26, 33, 0.62);
+    --glass-line: rgba(255, 255, 255, 0.07);
+    --bronze: #c9a07c;           /* the C3's brown, lit */
+    --cool: #7fb4ff;
+    --green: #4ade80;
+    --amber: #fbbf24;
+    --red: #f87171;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html, body { height: 100%; margin: 0; overflow: hidden; color: var(--ink);
+    font-family: "Roboto", "Inter", -apple-system, "Helvetica Neue", Arial, sans-serif; font-variant-numeric: tabular-nums; }
+
+  /* backdrop: a deep blue-black room, a slow bronze and cold light drifting behind the car */
+  body { background: #05070a; }
+  #backdrop { position: fixed; inset: 0; overflow: hidden;
+    background: radial-gradient(120% 90% at 58% 62%, #141a24 0%, #0a0d13 48%, #05070a 100%); }
+  #backdrop i { position: absolute; border-radius: 50%; will-change: transform; }
+  #glowA { width: 70vw; height: 70vw; left: 22vw; top: 8vh;
+    background: radial-gradient(circle, rgba(201, 160, 124, 0.16) 0%, rgba(201, 160, 124, 0) 62%);
+    animation: driftA 26s ease-in-out infinite alternate; }
+  #glowB { width: 60vw; height: 60vw; left: 48vw; top: -18vh;
+    background: radial-gradient(circle, rgba(127, 180, 255, 0.10) 0%, rgba(127, 180, 255, 0) 60%);
+    animation: driftB 34s ease-in-out infinite alternate; }
+  #sweep { position: absolute; inset: -20% -60%; border-radius: 0 !important;
+    background: linear-gradient(100deg, rgba(255,255,255,0) 42%, rgba(255,255,255,0.035) 50%, rgba(255,255,255,0) 58%);
+    animation: sweep 14s linear infinite; }
+  #vignette { position: absolute; inset: 0; border-radius: 0 !important;
+    background: radial-gradient(130% 100% at 55% 55%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.55) 100%); }
+  @keyframes driftA { from { transform: translate(-4vw, 2vh) scale(1); } to { transform: translate(5vw, -3vh) scale(1.12); } }
+  @keyframes driftB { from { transform: translate(3vw, 0) scale(1.05); } to { transform: translate(-6vw, 6vh) scale(0.95); } }
+  @keyframes sweep { from { transform: translateX(-40%); } to { transform: translateX(40%); } }
+  @media (prefers-reduced-motion: reduce) { #backdrop i { animation: none !important; } }
+
+  #scene { position: fixed; inset: 0; }
+  canvas { display: block; touch-action: none; }
+
+  /* top bar */
+  #top { position: fixed; top: 0; left: 0; right: 0; height: 7vh; min-height: 38px; z-index: 5; pointer-events: none;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 2.4vw; font-size: clamp(12px, 2.1vh, 17px); color: var(--muted); }
+  #top .l, #top .r { display: flex; align-items: center; gap: 1.6vw; }
+  #gearTop { letter-spacing: .3em; color: var(--faint); font-weight: 500; }
+  #gearTop b { color: var(--ink); font-weight: 500; }
+  #gearTop b.rev { color: var(--red); }
+  #clock { color: var(--ink); font-weight: 500; }
+  .src { display: flex; align-items: center; gap: 6px; }
+  .src i { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); }
+  .src.on i { background: var(--green); }
+  #plate { letter-spacing: .14em; font-size: .86em; }
+
+  /* left column */
+  #left { position: fixed; left: 2.4vw; top: 9vh; width: 19vw; min-width: 190px; bottom: 30vh; z-index: 5;
+    display: flex; flex-direction: column; gap: 2.4vh; }
+  #speedRow { display: flex; align-items: center; gap: .8vw; }
+  .turn { width: 3.6vh; height: 3.6vh; color: var(--off); flex: none; }
+  .turn.on { color: var(--green); filter: drop-shadow(0 0 6px rgba(74, 222, 128, .7)); }
+  #speedBox { display: flex; flex-direction: column; align-items: center; min-width: 4.2ch; }
+  #speed { font-size: clamp(54px, 14vh, 128px); font-weight: 200; line-height: .92; letter-spacing: -0.03em; }
+  #speedUnit { font-size: clamp(11px, 1.8vh, 14px); color: var(--muted); letter-spacing: .2em; }
+  #lamps { display: grid; grid-template-columns: repeat(3, 5vh); gap: 1.4vh 1.6vh; }
+  .lamp { width: 5vh; height: 5vh; min-width: 30px; min-height: 30px; color: var(--off); }
+  .lamp.on.g { color: var(--green); filter: drop-shadow(0 0 5px rgba(74, 222, 128, .55)); }
+  .lamp.on.b { color: var(--cool); filter: drop-shadow(0 0 5px rgba(127, 180, 255, .6)); }
+  .lamp.on.a { color: var(--amber); filter: drop-shadow(0 0 5px rgba(251, 191, 36, .55)); }
+  .lamp.on.r { color: var(--red); filter: drop-shadow(0 0 5px rgba(248, 113, 113, .55)); }
+  #alerts { display: flex; flex-direction: column; gap: .9vh; margin-top: auto; }
+  .alert { display: flex; align-items: center; gap: 10px; padding: 1vh 1vw; border-radius: 14px; font-size: clamp(12px, 1.9vh, 15px);
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.10), rgba(251, 191, 36, 0.02)); color: #fde68a; }
+  .alert::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+  .alert.red { background: linear-gradient(90deg, rgba(248, 113, 113, 0.13), rgba(248, 113, 113, 0.02)); color: #fecaca; }
+  .alert.info { background: linear-gradient(90deg, rgba(127, 180, 255, 0.10), rgba(127, 180, 255, 0.02)); color: #c7dcff; }
+
+  /* labels pinned to the car */
+  #callouts { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
+  .co { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: flex-start; will-change: transform; transition: opacity .3s; opacity: 0; }
+  .co span { display: block; }
+  .co .t, .co .v { text-shadow: 0 1px 8px rgba(0,0,0,.8); margin-left: -2px; }
+  .co .t { font-size: clamp(11px, 1.8vh, 14px); color: var(--muted); letter-spacing: .02em; white-space: nowrap; }
+  .co .v { font-size: clamp(13px, 2.2vh, 17px); color: var(--ink); white-space: nowrap; max-width: 22vw; overflow: hidden; text-overflow: ellipsis; }
+  .co .ln { width: 1px; background: linear-gradient(rgba(255,255,255,.55), rgba(255,255,255,.12)); margin: 6px 0 0 0; }
+  .co .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink); margin-left: -3px; box-shadow: 0 0 10px rgba(255,255,255,.6); }
+  .co.warn .v { color: #fde68a; } .co.warn .dot { background: var(--amber); box-shadow: 0 0 12px var(--amber); }
+  .co.stop .v { color: #fecaca; } .co.stop .dot { background: var(--red); box-shadow: 0 0 12px var(--red); }
+  .co.open .v { color: #fde68a; }
+
+  /* trip strip: one sheet of smoked glass, figures set in light type, hairline dividers */
+  #cards { position: fixed; left: 24vw; right: 3vw; bottom: 12vh; height: 13vh; min-height: 78px; z-index: 5;
+    display: flex; align-items: stretch; border-radius: 22px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 20px 40px -24px rgba(0,0,0,0.8);
+    backdrop-filter: blur(16px) saturate(120%); -webkit-backdrop-filter: blur(16px) saturate(120%); }
+  .stat { flex: 1; min-width: 0; padding: 1.7vh 1.6vw; display: flex; flex-direction: column; justify-content: center; gap: .5vh; position: relative; }
+  .stat + .stat::before { content: ""; position: absolute; left: 0; top: 22%; bottom: 22%; width: 1px;
+    background: linear-gradient(rgba(255,255,255,0), rgba(255,255,255,0.12), rgba(255,255,255,0)); }
+  .lbl { font-size: clamp(9px, 1.45vh, 11px); color: var(--muted); letter-spacing: .18em; text-transform: uppercase; white-space: nowrap; }
+  .num { font-size: clamp(20px, 4.4vh, 34px); font-weight: 200; line-height: 1; letter-spacing: -0.01em; white-space: nowrap; }
+  .num small { font-size: .42em; font-weight: 400; color: var(--muted); margin-left: 5px; letter-spacing: .1em; }
+  .sub { font-size: clamp(10px, 1.6vh, 12px); color: rgba(255,255,255,0.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #cardOdo { cursor: pointer; }
+  #cardOdo .sub { color: rgba(201,160,124,0.75); }
+  #cardPlay { flex: 0 0 auto; flex-direction: row; align-items: center; gap: 1vw; padding: 0 1.8vw; cursor: pointer; }
+  #cardPlay .ring { width: 6vh; height: 6vh; min-width: 38px; min-height: 38px; border-radius: 50%; display: grid; place-items: center;
+    border: 1px solid rgba(201,160,124,0.45); color: var(--bronze); background: radial-gradient(circle, rgba(201,160,124,0.14), rgba(201,160,124,0)); }
+  #cardPlay .ring svg { width: 46%; height: 46%; }
+  #cardPlay .num { font-size: clamp(15px, 2.6vh, 20px); font-weight: 300; }
+  #cardPlay:active .ring { background: rgba(201,160,124,0.25); }
+
+  /* dock */
+  #dock { position: fixed; left: 0; right: 0; bottom: 0; height: 10.5vh; min-height: 56px; z-index: 6;
+    display: flex; align-items: center; justify-content: center; gap: 4vw;
+    background: linear-gradient(to top, rgba(5,7,10,.94), rgba(5,7,10,0)); }
+  .dk { appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: clamp(10px, 1.6vh, 13px);
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 10px; border-radius: 12px; }
+  .dk svg { width: 4.2vh; height: 4.2vh; min-width: 24px; min-height: 24px; color: var(--ink); }
+  .dk:active { background: rgba(255,255,255,.08); }
+  .dk.on svg { color: var(--bronze); }
+
+  /* Floating launcher, leaving the dashboard visible around it. */
+  #drawer { position: fixed; top: 12vh; bottom: 12vh; left: 14.5vw; right: 14.5vw; z-index: 20; display: none; flex-direction: column;
+    padding: 18px 20px 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 18px;
+    background: rgba(13,17,22,.9); box-shadow: 0 20px 65px rgba(0,0,0,.35); }
+  #drawer.open { display: flex; }
+  #drawerHead { display: flex; align-items: center; gap: 14px; min-height: 48px; margin-bottom: 12px; }
+  #drawerHead .eyebrow { display: none; }
+  #drawerHead h2 { font-size: 21px; font-weight: 500; margin: 0; }
+  #appCount { color: var(--muted); font-size: 13px; margin: 0 auto 0 0; }
+  #drawerHead button { appearance: none; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 15px; min-height: 48px; padding: 10px 14px; border-radius: 10px; }
+  #drawerHead button[aria-pressed="true"] { color: var(--ink); background: var(--glass); }
+  #apps { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); align-content: start; gap: 8px 4px; }
+  .app { min-width: 0; display: flex; flex-direction: column; align-items: stretch; }
+  .appLaunch { appearance: none; border: 0; background: transparent; color: var(--ink); font: inherit; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 14px 5px 10px; height: 128px; border-radius: 12px; }
+  .appLaunch:active, #drawerHead button:active { background: var(--glass); }
+  .appLaunch:disabled { opacity: 1; color: var(--ink); }
+  .appLaunch img { width: 58px; height: 58px; object-fit: contain; flex-shrink: 0; }
+  .appName { font-size: 14px; line-height: 1.25; max-width: 100%; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; text-align: center; }
+  .app.hiddenApp .appLaunch { opacity: .35; }
+  .appVisibility { appearance: none; border: 1px solid var(--glass-line); background: transparent; color: var(--muted); font: inherit; font-size: 13px; min-height: 44px; border-radius: 9px; margin: 0 8px 8px; }
+  .app.hiddenApp .appVisibility { color: var(--ink); }
+  .appsEmpty { grid-column: 1 / -1; color: var(--muted); font-size: 18px; line-height: 1.6; padding: 25px; }
+  #drawer button:focus-visible { outline: 2px solid var(--bronze); outline-offset: -2px; }
+  @media (max-width: 850px) { #drawer { left: 5vw; right: 5vw; } #apps { grid-template-columns: repeat(4,minmax(0,1fr)); } #appCount { display: none; } #drawerHead h2 { margin-right: auto; } }
+
+  /* odometer setting */
+  #odoDialog { position: fixed; inset: 0; z-index: 25; background: rgba(5,7,10,.8); display: none; align-items: center; justify-content: center; }
+  #odoDialog.open { display: flex; }
+  #odoBox { background: #12161d; border: 1px solid var(--glass-line); border-radius: 18px; padding: 3vh 2.4vw; width: min(460px, 90vw); display: flex; flex-direction: column; gap: 2vh; }
+  #odoBox p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+  #odoInput { font: inherit; font-size: 30px; font-weight: 300; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--glass-line); background: #0a0d12; color: var(--ink); width: 100%; user-select: text; -webkit-user-select: text; }
+  #odoBox .btns { display: flex; justify-content: flex-end; gap: 10px; }
+  #odoBox button { appearance: none; font: inherit; font-size: 16px; padding: 10px 22px; border-radius: 12px; border: 1px solid var(--glass-line); background: transparent; color: var(--ink); }
+  #odoBox button.main { background: var(--bronze); border-color: var(--bronze); color: #1a130d; }
+
+  /* side mode: the narrow panel next to CarPlay */
+  body.side #top, body.side #cards, body.side #dock, body.side #callouts, body.side #demoTag { display: none; }
+  body.side #left { left: 0; right: 0; width: auto; min-width: 0; top: 4vh; bottom: 3vh; align-items: center; gap: 2vh; pointer-events: none; }
+  body.side #speed { font-size: clamp(48px, 11vh, 96px); }
+  body.side #lamps { grid-template-columns: repeat(6, 4.2vh); gap: 1vh; }
+  body.side .lamp { width: 4.2vh; height: 4.2vh; min-width: 24px; min-height: 24px; }
+  body.side #alerts { position: fixed; left: 5vw; right: 5vw; bottom: 3vh; margin: 0; }
+  body.side .alert { font-size: clamp(11px, 1.8vh, 14px); }
+  body.side #backdrop { box-shadow: inset 1px 0 0 rgba(255,255,255,0.06); }
+  #loader { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: #05070a; transition: opacity .5s; color: var(--muted); font-size: 13px; letter-spacing: .2em; }
+  #loader.hidden { opacity: 0; pointer-events: none; }
+  #demoTag { position: fixed; top: 7.5vh; right: 2.4vw; z-index: 5; font-size: 11px; color: var(--bronze); letter-spacing: .2em; display: none; }
+  body.light {
+    --ink: #20242a; --muted: #626a74; --faint: #9ba1a9; --off: rgba(25,35,45,.18);
+    --glass: rgba(232,228,219,.8); --glass-line: rgba(30,40,50,.12);
+    --bronze: #876145; --green: #15964d; --cool: #2267c5; --amber: #ac7000; --red: #c73636;
+    background: #f2eee5;
+  }
+  body.light #backdrop { background: radial-gradient(ellipse at 58% 58%, #faf7f0 0%, #f0ece3 65%, #e6e0d5 100%); }
+  body.light #vignette { opacity: .08; }
+  body.light #glowA, body.light #glowB, body.light #sweep { opacity: .3; }
+  body.light #cards { background: rgba(255,252,245,.76); box-shadow: 0 8px 30px rgba(30,40,50,.06); }
+  body.light #dock { background: rgba(245,241,232,.94); border-top: 1px solid var(--glass-line); }
+  body.light #drawer { background: rgba(250,247,240,.92); border-color: rgba(255,255,255,.8); box-shadow: 0 18px 60px rgba(25,35,45,.18); }
+  body.light .co .t, body.light .co .v { text-shadow: 0 1px 5px #fff; }
+  body.light .co .ln { background: linear-gradient(rgba(30,40,50,.5), rgba(30,40,50,.12)); }
+  body.light .co.open .v, body.light .co.warn .v { color: #875700; }
+  body.light .co.stop .v { color: var(--red); }
+  body.light #odoBox, body.light #odoInput { background: #faf7f0; }
+  body.light #loader { background: #f2eee5; }
+</style>
+</head>
+<body>
+<div id="backdrop"><i id="glowA"></i><i id="glowB"></i><i id="sweep"></i><i id="vignette"></i></div>
+<div id="scene"></div>
+<div id="callouts"></div>
+
+<div id="top">
+  <div class="l"><span id="gearTop"></span><span id="plate">CITROËN C3</span></div>
+  <div class="r">
+    <span id="clock">--:--</span>
+    <span id="temp"></span>
+    <span class="src" id="srcCan"><i></i>Voiture</span>
+    <span class="src" id="srcGps"><i></i>GPS</span>
+  </div>
+</div>
+<div id="demoTag">DÉMO</div>
+
+<div id="left">
+  <div id="speedRow">
+    <svg class="turn" id="turnL" viewBox="0 0 24 24"><path fill="currentColor" d="M10 4 2 12l8 8v-5h12V9H10z"/></svg>
+    <div id="speedBox"><span id="speed">0</span><span id="speedUnit">KM/H</span></div>
+    <svg class="turn" id="turnR" viewBox="0 0 24 24"><path fill="currentColor" d="M14 4l8 8-8 8v-5H2V9h12z"/></svg>
+  </div>
+  <div id="lamps">
+    <svg class="lamp g" id="lpPos" viewBox="0 0 32 32" aria-label="Feux de position"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 9a7 7 0 0 0 0 14"/><path d="M20 9a7 7 0 0 1 0 14"/><path d="M6 11l3 1M5 16h3M6 21l3-1M26 11l-3 1M27 16h-3M26 21l-3-1"/></g></svg>
+    <svg class="lamp g" id="lpLow" viewBox="0 0 32 32" aria-label="Feux de croisement"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 7c-6 0-8 4.5-8 9s2 9 8 9c2 0 3-4 3-9s-1-9-3-9z"/><path d="M8 10l-5 2M8 15l-5 2M8 20l-5 2M8 25l-5 2"/></g></svg>
+    <svg class="lamp b" id="lpHigh" viewBox="0 0 32 32" aria-label="Feux de route"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 7c-6 0-8 4.5-8 9s2 9 8 9c2 0 3-4 3-9s-1-9-3-9z"/><path d="M8 10H3M8 14H3M8 18H3M8 22H3"/></g></svg>
+    <svg class="lamp g" id="lpFogF" viewBox="0 0 32 32" aria-label="Antibrouillard avant"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M19 8c-5 0-7 4-7 8s2 8 7 8c2 0 3-3.6 3-8s-1-8-3-8z"/><path d="M10 11H4M10 16H4M10 21H4"/><path d="M7 7c-1.5 6-1.5 12 0 18" stroke-dasharray="2 3"/></g></svg>
+    <svg class="lamp a" id="lpFogR" viewBox="0 0 32 32" aria-label="Antibrouillard arrière"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M13 8c5 0 7 4 7 8s-2 8-7 8c-2 0-3-3.6-3-8s1-8 3-8z"/><path d="M22 11h6M22 16h6M22 21h6"/><path d="M25 7c1.5 6 1.5 12 0 18" stroke-dasharray="2 3"/></g></svg>
+    <svg class="lamp r" id="lpHand" viewBox="0 0 32 32" aria-label="Frein à main"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="16" cy="16" r="8"/><path d="M8 7a12 12 0 0 0 0 18M24 7a12 12 0 0 1 0 18"/></g><text x="16" y="20.5" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor" font-family="Arial">P</text></svg>
+  </div>
+  <div id="alerts"></div>
+</div>
+
+<div id="cards">
+  <div class="stat">
+    <span class="lbl">Trajet</span>
+    <span class="num" id="nowKm">0,0<small>KM</small></span>
+    <span class="sub" id="nowSub">À l'arrêt</span>
+  </div>
+  <div class="stat">
+    <span class="lbl">Autonomie</span>
+    <span class="num" id="tRange">–</span>
+    <span class="sub" id="tInst"> </span>
+  </div>
+  <div class="stat">
+    <span class="lbl">Moyenne</span>
+    <span class="num" id="tAvgL">–</span>
+    <span class="sub" id="tTrip"> </span>
+  </div>
+  <div class="stat" id="cardOdo">
+    <span class="lbl">Compteur</span>
+    <span class="num" id="odoKm">–</span>
+    <span class="sub" id="odoTag">Touchez pour le régler</span>
+  </div>
+  <div class="stat" id="cardPlay">
+    <span class="ring"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.5v13l10.5-6.5z"/></svg></span>
+    <span><span class="lbl">Téléphone</span><br><span class="num">CarPlay</span></span>
+  </div>
+</div>
+
+<div id="dock">
+  <button class="dk on" id="btnHome"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 15l2-5c.4-1 1.3-2 2.6-2h8.8c1.3 0 2.2 1 2.6 2l2 5v3H3z"/><circle cx="7" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/></g></svg>Voiture</button>
+  <button class="dk" id="btnCarplay"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2.5"/><path d="M9 21h6M12 17v4"/></g></svg>CarPlay</button>
+  <button class="dk" id="btnApps"><svg viewBox="0 0 24 24"><g fill="currentColor"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></g></svg>Applications</button>
+  <button class="dk" id="btnView"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></g></svg>Vue</button>
+  <button class="dk" id="btnTheme" aria-label="Activer le thème clair"><svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.4 1.4m11.2 11.2L19 19M5 19l1.4-1.4M17.6 6.4L19 5"/></g></svg><span id="themeLabel">Clair</span></button>
+</div>
+
+<div id="drawer">
+  <div id="drawerHead">
+    <span class="eyebrow">Votre espace</span>
+    <h2>Applications</h2>
+    <p id="appCount" aria-live="polite"></p>
+    <button id="btnOrganizeApps" aria-pressed="false">Organiser</button>
+    <button id="btnCloseApps">‹ Retour</button>
+  </div>
+  <div id="apps"></div>
+</div>
+
+<div id="odoDialog">
+  <div id="odoBox">
+    <div class="big">Kilométrage</div>
+    <p>Recopiez le kilométrage affiché au compteur. L'écran l'avance ensuite avec les kilomètres roulés, tant que la voiture ne donne pas le sien.</p>
+    <input id="odoInput" type="number" inputmode="numeric" min="0" max="999999" placeholder="128450" />
+    <div class="btns"><button id="odoCancel">Annuler</button><button class="main" id="odoSave">Enregistrer</button></div>
+  </div>
+</div>
+
+<div id="loader">CHARGEMENT</div>
+
+<script src="app.js"></script>
+</body>
+</html>

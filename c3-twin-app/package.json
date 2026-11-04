@@ -1,0 +1,15 @@
+{
+  "name": "c3-twin-web",
+  "private": true,
+  "devDependencies": {
+    "esbuild": "0.24.2",
+    "three": "0.160.0"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.2.1",
+    "@gltf-transform/extensions": "^4.2.1",
+    "@gltf-transform/functions": "^4.2.1",
+    "draco3dgltf": "^1.5.7",
+    "meshoptimizer": "^0.22.0"
+  }
+}

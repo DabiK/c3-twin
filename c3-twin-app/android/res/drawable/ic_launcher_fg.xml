@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A small hatchback in profile, on the C3's brown -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFF"
+        android:pathData="M30,64 L32,55 C33,52 35,50 38,49 L45,43 C47,41 50,40 53,40 L66,40 C69,40 71,41 73,43 L79,50 C81,51 82,53 82,56 L82,64 Z" />
+    <path android:fillColor="#6B4A2F"
+        android:pathData="M47,49 L52,44 L60,44 L60,49 Z M63,49 L63,44 L68,44 C69,44 70,45 71,46 L74,49 Z" />
+    <path android:fillColor="#FFFFFF" android:pathData="M42,64 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+    <path android:fillColor="#6B4A2F" android:pathData="M42,64 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path android:fillColor="#FFFFFF" android:pathData="M71,64 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" />
+    <path android:fillColor="#6B4A2F" android:pathData="M71,64 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+</vector>

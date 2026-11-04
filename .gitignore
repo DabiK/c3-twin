@@ -1,0 +1,30 @@
+.DS_Store
+node_modules/
+build/
+demo/
+__pycache__/
+*.pyc
+*.keystore
+.gradle/
+
+# modèles 3D sources à la racine (l'asset de l'app est c3-twin-app/web/car.glb)
+/*.glb
+
+# généré par esbuild dans build.sh
+c3-twin-app/web/app.js
+
+# Local device evidence and credentials (never needed to build)
+releve_*/
+journaux/
+backups/
+*.pcap
+*.pcap[0-9]*
+*.apk
+*.log
+*.h264
+*.tar.gz
+.env
+.env.*
+
+# Isolated public export; never add its nested history to the local repository
+.public-release/

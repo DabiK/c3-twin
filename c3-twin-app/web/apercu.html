@@ -1,0 +1,191 @@
+<title>C3 tableau de bord</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+  /* Layout: the head unit's screen at 16:9 in a dark bezel, the car's controls in groups underneath. */
+  :root {
+    --bg: #f3f2ef;
+    --surface: #ffffff;
+    --fg: #1d2024;
+    --muted: #646a72;
+    --line: #dcdad4;
+    --accent: #6b4a2f;          /* the C3's brown */
+    --accent-soft: #efe5db;
+    --on-accent: #ffffff;
+    --bezel: #0b0d10;
+    --display: "Saira Semi Condensed", "Arial Narrow", Arial, sans-serif;
+    --body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121315; --surface: #1b1d20; --fg: #e8e9eb; --muted: #9aa0a8; --line: #2c2f34;
+      --accent: #c9a07c; --accent-soft: #2e251d; --on-accent: #1a130d; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121315; --surface: #1b1d20; --fg: #e8e9eb; --muted: #9aa0a8; --line: #2c2f34;
+    --accent: #c9a07c; --accent-soft: #2e251d; --on-accent: #1a130d; color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 48px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex; flex-direction: column; gap: 22px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; }
+  h1 { font-family: var(--display); font-weight: 600; font-size: 28px; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+  header p { margin: 0; color: var(--muted); max-width: 60ch; }
+  .plate { font-family: var(--display); font-weight: 500; font-size: 14px; letter-spacing: .08em; color: var(--muted); }
+
+  .bezel { background: var(--bezel); border-radius: 18px; padding: 12px; }
+  .screen { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 8px; background: #07090b; }
+  .screen iframe { position: absolute; left: 0; top: 0; width: 1280px; height: 720px; border: 0; transform-origin: 0 0; }
+  .caption { font-size: 13px; color: var(--muted); margin: 0; }
+
+  .groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .group { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .group h2 { font-family: var(--display); font-weight: 500; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .btns button { appearance: none; font: inherit; font-size: 13.5px; color: var(--fg); background: transparent;
+    border: 1px solid var(--line); border-radius: 8px; padding: 7px 11px; cursor: pointer; }
+  .btns button:hover { border-color: var(--muted); }
+  .btns button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .btns button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .slider { display: grid; grid-template-columns: 74px 1fr 64px; align-items: center; gap: 10px; font-size: 13.5px; }
+  .slider label { color: var(--muted); }
+  .slider output { text-align: right; font-variant-numeric: tabular-nums; }
+  .slider input { width: 100%; accent-color: var(--accent); }
+  .note { font-size: 13px; color: var(--muted); margin: 0; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>C3 tableau de bord</h1>
+      <span class="plate">CITROËN C3 · PLAQUE NEUTRE · AUTORADIO QF001</span>
+    </div>
+    <p>L'écran d'accueil tel qu'il apparaîtra sur l'autoradio. Les commandes en dessous simulent ce que la voiture enverra.</p>
+  </header>
+
+  <div class="bezel">
+    <div class="screen" id="screen">
+      <iframe id="frame" src="ecran.html" title="Écran de l'autoradio" scrolling="no"></iframe>
+    </div>
+  </div>
+  <p class="caption">Écran simulé en 1280 × 720. On peut tourner autour de la voiture au doigt ou à la souris ; la vue revient seule après 10 secondes.</p>
+
+  <div class="groups">
+    <section class="group">
+      <h2>Ouvrants</h2>
+      <div class="btns" id="gDoors"></div>
+    </section>
+    <section class="group">
+      <h2>Phares</h2>
+      <div class="btns" id="gBeam"></div>
+      <div class="btns" id="gFog"></div>
+    </section>
+    <section class="group">
+      <h2>Signalisation</h2>
+      <div class="btns" id="gSignal"></div>
+    </section>
+    <section class="group">
+      <h2>Conduite</h2>
+      <div class="slider"><label for="speed">Vitesse</label><input id="speed" type="range" min="0" max="130" step="1" value="0"><output id="speedOut">0 km/h</output></div>
+      <div class="slider"><label for="steer">Braquage</label><input id="steer" type="range" min="-30" max="30" step="1" value="0"><output id="steerOut">0°</output></div>
+      <div class="btns" id="gDrive"></div>
+    </section>
+    <section class="group">
+      <h2>Alertes de la voiture</h2>
+      <div class="btns" id="gWarn"></div>
+      <p class="note">Numéros d'alerte PSA. Le dernier bouton simule un numéro encore inconnu, affiché tel quel.</p>
+    </section>
+    <section class="group">
+      <h2>Écran</h2>
+      <div class="btns" id="gScreen"></div>
+      <p class="note">Sur l'autoradio, CarPlay ouvre ZLink et Applications liste les apps installées. Ici, la liste montre des exemples.</p>
+    </section>
+  </div>
+</div>
+
+<script>
+  const frame = document.getElementById('frame');
+  const screenEl = document.getElementById('screen');
+  const fit = () => { frame.style.transform = 'scale(' + (screenEl.clientWidth / 1280) + ')'; };
+  new ResizeObserver(fit).observe(screenEl);
+  fit();
+
+  const send = (msg) => frame.contentWindow && frame.contentWindow.postMessage(msg, '*');
+  const s = {
+    doors: { FL: false, FR: false, RL: false, RR: false }, hatch: false, bonnet: false,
+    lights: { beam: 'low', fogFront: false, fogRear: false, brake: false, reverse: false, turnLeft: false, turnRight: false, hazard: false },
+    handbrake: false, beltDriver: false, speed: 0, steer: 0, sources: { car: true, gps: true },
+    warnings: [],
+    trip: { odometer: 128452, range: 486, instant: 5.6, outsideTemp: 11, trip1: { km: 1284.6, avgKmh: 41, avgL100: 5.9 } },
+  };
+  let demo = false;
+  const push = () => send({ patch: s });
+  frame.addEventListener('load', () => setTimeout(push, 300));
+
+  function button(parent, label, isOn, onClick) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    b.addEventListener('click', () => { onClick(); render(); push(); });
+    b.dataset.check = '';
+    b._isOn = isOn;
+    parent.appendChild(b);
+  }
+  function render() {
+    document.querySelectorAll('[data-check]').forEach((b) => b.setAttribute('aria-pressed', String(!!b._isOn())));
+  }
+
+  const SIDES = [['FL', 'Avant gauche'], ['FR', 'Avant droite'], ['RL', 'Arrière gauche'], ['RR', 'Arrière droite']];
+  const gDoors = document.getElementById('gDoors');
+  for (const [k, n] of SIDES) button(gDoors, n, () => s.doors[k], () => { s.doors[k] = !s.doors[k]; });
+  button(gDoors, 'Coffre', () => s.hatch, () => { s.hatch = !s.hatch; });
+  button(gDoors, 'Capot', () => s.bonnet, () => { s.bonnet = !s.bonnet; });
+
+  const gBeam = document.getElementById('gBeam');
+  for (const [v, n] of [['off', 'Éteints'], ['position', 'Position'], ['low', 'Croisement'], ['high', 'Route']])
+    button(gBeam, n, () => s.lights.beam === v, () => { s.lights.beam = v; });
+  const gFog = document.getElementById('gFog');
+  button(gFog, 'Antibrouillard avant', () => s.lights.fogFront, () => { s.lights.fogFront = !s.lights.fogFront; });
+  button(gFog, 'Antibrouillard arrière', () => s.lights.fogRear, () => { s.lights.fogRear = !s.lights.fogRear; });
+
+  const gSignal = document.getElementById('gSignal');
+  button(gSignal, 'Clignotant gauche', () => s.lights.turnLeft, () => { s.lights.turnLeft = !s.lights.turnLeft; s.lights.turnRight = false; });
+  button(gSignal, 'Clignotant droit', () => s.lights.turnRight, () => { s.lights.turnRight = !s.lights.turnRight; s.lights.turnLeft = false; });
+  button(gSignal, 'Warning', () => s.lights.hazard, () => { s.lights.hazard = !s.lights.hazard; });
+  button(gSignal, 'Stop', () => s.lights.brake, () => { s.lights.brake = !s.lights.brake; });
+
+  const gDrive = document.getElementById('gDrive');
+  button(gDrive, 'Marche arrière', () => s.lights.reverse, () => { s.lights.reverse = !s.lights.reverse; });
+  button(gDrive, 'Frein à main', () => s.handbrake, () => { s.handbrake = !s.handbrake; });
+  button(gDrive, 'Ceinture non bouclée', () => s.beltDriver, () => { s.beltDriver = !s.beltDriver; });
+
+  const gWarn = document.getElementById('gWarn');
+  const hasWarn = (proto, code) => s.warnings.some((w) => w.proto === proto && w.code === code);
+  const toggleWarn = (proto, code) => {
+    s.warnings = hasWarn(proto, code) ? s.warnings.filter((w) => !(w.proto === proto && w.code === code)) : s.warnings.concat({ proto, code, detail: 0 });
+  };
+  for (const [code, n] of [[0x009A, 'Ampoule croisement'], [0x009C, 'Ampoule feu stop'], [0x0074, 'Ampoules grillées'],
+    [0x008D, 'Pression des pneus'], [0x0067, 'Plaquettes usées'], [0x0004, "Niveau d'huile"], [0x0085, 'Batterie faible'],
+    [0x0001, 'Température moteur'], [0x00E0, 'Carburant bas']])
+    button(gWarn, n, () => hasWarn('psa', code), () => toggleWarn('psa', code));
+  button(gWarn, 'Alerte inconnue', () => hasWarn('raise', 0x23), () => toggleWarn('raise', 0x23));
+
+  const gScreen = document.getElementById('gScreen');
+  button(gScreen, 'Démo automatique', () => demo, () => { demo = !demo; send({ __demo: demo }); });
+  const viewBtn = document.createElement('button');
+  viewBtn.type = 'button';
+  viewBtn.textContent = 'Changer de vue';
+  viewBtn.addEventListener('click', () => send({ __view: true }));
+  gScreen.appendChild(viewBtn);
+
+  const speed = document.getElementById('speed'), speedOut = document.getElementById('speedOut');
+  speed.addEventListener('input', () => { s.speed = +speed.value; speedOut.textContent = s.speed + ' km/h'; push(); });
+  const steer = document.getElementById('steer'), steerOut = document.getElementById('steerOut');
+  steer.addEventListener('input', () => { s.steer = -steer.value; steerOut.textContent = (steer.value > 0 ? '+' : '') + steer.value + '°'; push(); });
+  render();
+</script>
