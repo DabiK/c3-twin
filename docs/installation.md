@@ -4,6 +4,13 @@ Toutes les manipulations et validations visuelles se font véhicule à l’arrê
 Les exemples utilisent `<IP>` ou `<SERIAL>` à remplacer par l’appareil identifié.
 Ne pas copier l’adresse d’une ancienne session : elle peut changer.
 
+## Avant de commencer : accès privilégié QF
+
+Pour reproduire la configuration complète de notre K706, préparer l’accès ADB/root
+via la procédure propre au firmware. L’activation provenait d’une option usine, mais
+son code exact n’est pas confirmé. Lire [les prérequis et pistes ADB/root](adb-root.md).
+L’installation de l’APK seule ne nécessite pas nécessairement root.
+
 ## APK précompilé (sans compilation)
 
 Télécharger `C3Twin.apk` dans [GitHub Releases](https://github.com/DabiK/c3-twin/releases/latest).

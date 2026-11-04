@@ -56,9 +56,10 @@ Pour ta C3, le plus probable est donc :
 
 ## Accès adb
 
-- Code usine **114477** : active le mode développeur, puis 7 appuis sur le numéro de build.
-- Sur les premiers firmwares, adb sans fil était actif par défaut, **en root**, sur le port **9876**. *À vérifier sur ton firmware de novembre 2024.*
-- Autres codes : 8888 réglages avancés, 22558800 remise à zéro complète (efface aussi la configuration CAN, à éviter).
+Les codes usine mentionnés dans les premières recherches n’ont pas été validés sur
+cet appareil. Le constat réel est un accès ADB root déjà actif, indiqué par l’utilisateur
+comme provenant d’une option usine. Voir [le guide ADB/root](../docs/adb-root.md) pour
+les prérequis vérifiés et les pistes adaptées au firmware exact.
 
 ## La sonde
 

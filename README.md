@@ -46,6 +46,8 @@ Le dépôt et l’APK contiennent uniquement le modèle final allégé.*
 
 **Prérequis à lire avant installation :**
 
+Pour reproduire toute la configuration QF, lire d’abord [le guide ADB/root et menu usine](docs/adb-root.md). Aucun code usine universel n’est confirmé.
+
 | Besoin | Prérequis |
 |---|---|
 | Interface | Android API 26 minimum, WebView avec WebGL, écran paysage |
