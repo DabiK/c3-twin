@@ -147,3 +147,9 @@ python3 -m http.server 8000 --directory web
 Ouvrir `http://localhost:8000/index.html?demo`. Le mode démo simule des données ; il ne
 valide ni le CAN, ni CarPlay, ni les permissions. Dans l’application, un appui de deux
 secondes sur la vitesse bascule la démo : la désactiver avant tout test véhicule.
+
+## Option QF : enlever le popup constructeur des portes
+
+Si le firmware superpose son propre dessin à l’ouverture d’une portière, voir
+[le réglage QF réversible validé](qf-door-popup.md). Les données de portes restent
+partagées avec C3 Twin. Cette option est indépendante du launcher.
