@@ -121,3 +121,47 @@ fonction testée. Ne pas joindre de VIN, plaque, capture de téléphone ni traje
 
 Aucune licence globale n’est encore choisie. Les licences tierces restent applicables.
 Le projet n’est affilié ni à Citroën, ni à Apple, ni à l’éditeur de Zlink.
+
+## Mettre C3 Twin comme launcher par défaut
+
+**Avant de changer le launcher, ouvrir C3 Twin et valider que l’application fonctionne
+correctement sur votre autoradio** : chargement du dashboard, navigation et accès aux
+applications. Si vous utilisez CarPlay, tester aussi Zlink et le retour à C3 Twin.
+Garder le launcher d’origine installé et conserver un accès ADB pour revenir en arrière.
+
+Remplacer `<SERIAL>` par la cible affichée dans `adb devices -l` (par exemple l’adresse
+et le port ADB de l’autoradio). Relever d’abord les réglages actuels :
+
+```bash
+adb -s <SERIAL> shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME
+adb -s <SERIAL> shell getprop persist.sys.qf.launcher
+```
+
+Définir ensuite C3 Twin comme écran d’accueil Android :
+
+```bash
+adb -s <SERIAL> shell cmd package set-home-activity fr.dabi.c3twin/.MainActivity
+```
+
+**Sur le firmware QF du K706 testé uniquement**, le choix Android ne suffisait pas :
+le firmware imposait encore son propre launcher. Avec l’accès ADB root, il a fallu
+modifier aussi sa propriété persistante :
+
+```bash
+adb -s <SERIAL> shell setprop persist.sys.qf.launcher fr.dabi.c3twin
+```
+
+Ne pas appliquer ce réglage QF à un autre firmware par défaut, ni créer la propriété
+si elle est absente. Vérifier ensuite le résultat avec Home :
+
+```bash
+adb -s <SERIAL> shell input keyevent KEYCODE_HOME
+```
+
+C3 Twin doit apparaître. Confirmer également au prochain démarrage normal de la voiture :
+le firmware peut restaurer la dernière application lors d’une sortie de veille.
+Le réglage persistant et la touche Home ont été vérifiés ; le démarrage après contact
+reste à confirmer sur le véhicule de référence.
+
+Le script `./installer_autoradio.sh <SERIAL> launcher` effectue ces réglages et sauvegarde
+les valeurs précédentes. Voir [le guide complet et le retour arrière](docs/installation.md#5-revenir-au-launcher-précédent).
