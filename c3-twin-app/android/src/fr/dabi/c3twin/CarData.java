@@ -98,6 +98,9 @@ final class CarData {
     private final HandlerThread thread = new HandlerThread("car");
     private Handler handler;
     private IBinder mcu;
+    private MtcSignals mtc;
+    boolean isMtc() { return mtc != null; }
+    MtcSignals mtcSignals() { return mtc; }
     private FileWriter log;
     private File logFile;
     private String lastSent = "";
@@ -154,6 +157,9 @@ final class CarData {
         thread.start();
         handler = new Handler(thread.getLooper());
         openLog();
+        if (service(MCU_SERVICE) == null && !hasQfVehicle()) {
+            mtc = new MtcSignals(context, () -> handler.post(this::changed));
+        } else {
         askVehicleAppToShare();
         IntentFilter f = new IntentFilter();
         f.addAction(ACTION_SHARE);
@@ -162,11 +168,18 @@ final class CarData {
         f.addAction(ACTION_REVERSE_OFF);
         context.registerReceiver(receiver, f, null, handler);
         handler.post(this::listenToMcu);
+        }
         handler.post(tick);
         startGps();
     }
 
+    private boolean hasQfVehicle() {
+        try { context.getPackageManager().getPackageInfo(VEHICLE, 0); return true; }
+        catch (PackageManager.NameNotFoundException e) { return false; }
+    }
+
     void stop() {
+        if (mtc != null) mtc.stop();
         try { context.unregisterReceiver(receiver); } catch (IllegalArgumentException ignored) { }
         LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         if (lm != null) lm.removeUpdates(gps);
@@ -185,6 +198,13 @@ final class CarData {
     /** The whole state, in the page's shape. */
     synchronized JSONObject snapshot() {
         try {
+            if (mtc != null) {
+                JSONObject patch = mtc.patch();
+                boolean gpsFresh = SystemClock.elapsedRealtime() - gpsAt < FRESH_MS && gpsSpeed >= 0;
+                patch.put("speed", gpsFresh ? Math.max(0, Math.round(gpsSpeed)) : 0);
+                patch.getJSONObject("sources").put("gps", gpsFresh);
+                return patch;
+            }
             long now = SystemClock.elapsedRealtime();
             JSONObject d = new JSONObject()
                     .put("FL", doors[0]).put("FR", doors[1]).put("RL", doors[2]).put("RR", doors[3]);
@@ -243,7 +263,7 @@ final class CarData {
     private final Runnable tick = new Runnable() {
         @Override
         public void run() {
-            String prop = systemProperty(REVERSE_PROP);
+            String prop = mtc == null ? systemProperty(REVERSE_PROP) : null;
             if (prop != null && !prop.isEmpty()) synchronized (CarData.this) { reverse = "true".equals(prop); }
             long now = SystemClock.elapsedRealtime();
             if (mcu != null && now >= nextAskAt) {
@@ -293,7 +313,8 @@ final class CarData {
     private void listenToMcu() {
         IBinder b = service(MCU_SERVICE);
         if (b == null) {
-            Log.i(TAG, "pas de service MCU (autoradio non QF ?)");
+            Log.i(TAG, "service MCU QF pas encore disponible");
+            handler.postDelayed(this::listenToMcu, 3000);
             return;
         }
         Parcel data = Parcel.obtain(), reply = Parcel.obtain();

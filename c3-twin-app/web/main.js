@@ -47,7 +47,7 @@ const state = {
   beltDriver: false,                                 // true = driver belt NOT fastened
   speed: 0,                                          // km/h
   steer: 0,                                          // road wheel degrees, + = left
-  sources: { car: false, gps: false },
+  sources: { car: false, gps: false, experimental: false, configured: false },
   warnings: [],                                      // [{ code, proto: 'psa' | 'raise', detail }]
   trip: {                                            // the car's trip computer; null = not said
     odometer: null, range: null, instant: null, fuel: null, outsideTemp: null,
@@ -64,7 +64,15 @@ function merge(dst, src) {
 }
 
 // while the demo runs it owns the state: the car's (or the emulator's) own updates wait
-function apply(patch) { merge(state, patch); refreshUi(); }
+function apply(patch) {
+  merge(state, patch); refreshUi();
+  const diagnostic = $('signalStatus');
+  if (diagnostic) {
+    diagnostic.hidden = !state.sources.experimental;
+    diagnostic.textContent = !state.sources.car ? 'MTCH expérimental · aucun signal récent · Signaux pour analyser' :
+      state.sources.configured ? 'MTCH expérimental · profil enregistré · champs non associés inconnus' : 'MTCH expérimental · analyse requise dans Signaux';
+  }
+}
 window.twin = {
   set(patch) { if (!demoTimer) apply(patch); },
   get() { return JSON.parse(JSON.stringify(state)); },
@@ -474,9 +482,11 @@ function frame() {
   renderer.setSize(w, h);
   camera.aspect = w / h;
   const aspect = w / h;
-  fitScale = aspect < 1.2 ? Math.min(3, 1.5 / aspect) : 1;
+  fitScale = aspect < 1.2 ? Math.min(5, Math.max(1, 0.95 / aspect)) : 1;
+  if (!SIDE && h <= 480 && w > h) fitScale *= 1.18;
+  controls.maxDistance = 11 * Math.max(1, fitScale);
   if (SIDE) camera.setViewOffset(w, h, 0, -h * 0.02, w, h);
-  else if (w > h) camera.setViewOffset(w, h, -w * 0.115, h * 0.12, w, h);
+  else if (w > h) camera.setViewOffset(w, h, -w * 0.115, h * (h <= 480 ? 0.17 : 0.12), w, h);
   else camera.clearViewOffset();
   camera.updateProjectionMatrix();
 }
@@ -551,9 +561,9 @@ function buildCallouts(warnings) {
   if (carBox.isEmpty() || SIDE) return;
   const open = Object.keys(SHORT_SIDE).filter((k) => state.doors[k]);
   const list = [
-    { key: 'hatch', title: 'Coffre', value: state.hatch ? 'Ouvert' : 'Fermé', cls: state.hatch ? 'open' : '', at: [boxPoint(0, 0.74, -0.97)] },
-    { key: 'bonnet', title: 'Capot', value: state.bonnet ? 'Ouvert' : 'Fermé', cls: state.bonnet ? 'open' : '', at: [boxPoint(0, 0.62, 0.72)] },
-    { key: 'doors', title: 'Portières', value: open.length ? open.map((k) => SHORT_SIDE[k]).join(' · ') + (open.length > 1 ? ' ouvertes' : ' ouverte') : 'Fermées',
+    { key: 'hatch', title: 'Coffre', value: state.hatch == null ? 'Inconnu' : state.hatch ? 'Ouvert' : 'Fermé', cls: state.hatch ? 'open' : '', at: [boxPoint(0, 0.74, -0.97)] },
+    { key: 'bonnet', title: 'Capot', value: state.bonnet == null ? 'Inconnu' : state.bonnet ? 'Ouvert' : 'Fermé', cls: state.bonnet ? 'open' : '', at: [boxPoint(0, 0.62, 0.72)] },
+    { key: 'doors', title: 'Portières', value: open.length ? open.map((k) => SHORT_SIDE[k]).join(' · ') + (open.length > 1 ? ' ouvertes' : ' ouverte') : Object.values(state.doors).some(v => v == null) ? 'Inconnues' : 'Fermées',
       cls: open.length ? 'open' : '', at: [boxPoint(0.98, 0.48, 0.12), boxPoint(-0.98, 0.48, 0.12)] },
   ];
   for (const w of warnings.filter((x) => x.zone && x.level !== 'info').slice(0, 2)) {
@@ -601,7 +611,8 @@ function placeCallouts() {
     }
     if (!best || bestDot < -0.25) { el.style.opacity = '0'; continue; }
     const [x, y] = toScreen(best);
-    shown.push({ el, x, y });
+    const labelWidth = Math.max(el.children[0].offsetWidth, el.children[1].offsetWidth);
+    shown.push({ el, x: Math.max(16, Math.min(x, w - labelWidth - 16)), y });
   }
   // each label takes the lowest row where it overlaps no other label
   shown.sort((a, b) => a.x - b.x);
@@ -614,7 +625,7 @@ function placeCallouts() {
     const labelBottom = Math.max(h * 0.12 + row * 52, roof - 18 - row * 52);
     s.el.children[2].style.height = Math.max(12, s.y - labelBottom - 10) + 'px';
     s.el.style.opacity = '1';
-    s.el.style.transform = 'translate(' + Math.round(s.x) + 'px,' + Math.round(s.y - s.el.offsetHeight + 4) + 'px)';
+    s.el.style.transform = 'translate(' + Math.round(s.x) + 'px,' + Math.round(Math.max(w < h ? Math.max(260, h * 0.28) : 74, Math.min(s.y - s.el.offsetHeight + 4, h - 210))) + 'px)';
   });
 }
 
@@ -808,6 +819,10 @@ document.addEventListener('click', e => {
   if (!$('drawer').contains(e.target) && !$('btnApps').contains(e.target)) $('drawer').classList.remove('open');
 });
 $('btnCloseApps').addEventListener('click', () => $('drawer').classList.remove('open'));
+$('btnVehicleSettings').addEventListener('click', () => {
+  if (native) native.launch('com.qf.carsettings');
+  else flash('Sur l’autoradio, ce bouton ouvre les réglages de la voiture');
+});
 $('btnView').addEventListener('click', nextView);
 
 function flash(text) {
@@ -943,3 +958,5 @@ animate();
 
 // in the side panel a tap anywhere goes back to the dashboard
 if (SIDE) document.addEventListener('click', () => { if (native && native.home) native.home(); });
+
+$('btnSignals').addEventListener('click', () => { if (window.Android?.diagnostics) Android.diagnostics(); });

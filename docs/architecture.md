@@ -68,3 +68,13 @@ Valider avec `./tools/check.sh`. Les tests physiques ne sont jamais remplacés p
 Pour la cadence, app chargée et ADB connecté : `node tools/check-cadence.mjs <SERIAL>`.
 Ce script nécessite un build de développement débogable (désactivé dans la release publique)
 et mesure 40 images via le débogage WebView, pas un benchmark de conduite.
+
+## Adaptateur MTCH expérimental (0.24)
+
+`MtcSignals` écoute les sources candidates sans écrire sur le MCU et conserve le
+profil accepté dans `SharedPreferences` (`mtch-signals-v1`). `SignalSetup` gère un
+brouillon indépendant et la confirmation. `SignalBits` isole la calibration binaire.
+`CarData` choisit QF si le service ou l’application véhicule QF est présent ; sinon
+il utilise le chemin passif expérimental. Les événements MTCH reviennent sur le
+thread de CarData et ne modifient aucun état ni compteur de requêtes QF.
+Voir [le parcours et les limites](mtch-experimental.md).

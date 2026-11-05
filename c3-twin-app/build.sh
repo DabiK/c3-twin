@@ -8,8 +8,8 @@ SDK=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/opt/homebrew/share/android-commandlinet
 BT=$SDK/build-tools/${BUILD_TOOLS_VERSION:-36.0.0}
 JAR=$SDK/platforms/android-${ANDROID_PLATFORM:-34}/android.jar
 OUT=build/apk
-VERSION_CODE=${VERSION_CODE:-22}
-VERSION_NAME=${VERSION_NAME:-0.22-public}
+VERSION_CODE=${VERSION_CODE:-24}
+VERSION_NAME=${VERSION_NAME:-0.24-mtch-experimental}
 
 for command in node javac java keytool zip; do
   command -v "$command" >/dev/null || { echo "Commande manquante : $command" >&2; exit 1; }

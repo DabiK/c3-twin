@@ -31,6 +31,9 @@ restent dans Zlink ; le tiroir C3 Twin liste les applications Android installée
 
 ## Avant de porter sur un autre matériel
 
+Pour un appareil identifié « PX5 », consulter [l'enquête et les informations nécessaires](portage-px5.md).
+Il n'existe pas encore d'adaptateur PX5/MTC validé dans C3 Twin.
+
 Relever modèle, API réelle, services MCU, boîtier CAN et launcher d’origine.
 Vérifier les données en lecture avant de modifier le profil. Ne pas écrire dans
 un port série ni remplacer les applications constructeur pour obtenir un signal.

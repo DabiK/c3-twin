@@ -7,6 +7,8 @@ OUT=$(mktemp -d)
 trap 'rm -rf "$OUT"' EXIT
 javac -d "$OUT" android/src/fr/dabi/c3twin/RaiseLights.java tests/RaiseLightsTest.java
 java -cp "$OUT" fr.dabi.c3twin.RaiseLightsTest
+javac -d "$OUT" android/src/fr/dabi/c3twin/SignalBits.java tests/SignalBitsTest.java
+java -cp "$OUT" fr.dabi.c3twin.SignalBitsTest
 node --check web/main.js
 node --check web/alertes.js
 ./build.sh

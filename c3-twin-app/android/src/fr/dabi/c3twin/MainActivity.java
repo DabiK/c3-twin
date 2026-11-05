@@ -47,6 +47,25 @@ public class MainActivity extends Activity implements CarData.Listener {
     private WebView web;
     private CarData car;
     private boolean pageReady;
+    private String pendingDiagnostic;
+    private SignalSetup signalSetup;
+    void exportDiagnostic(String report) {
+        pendingDiagnostic = report;
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT).setType("text/plain")
+            .addCategory(Intent.CATEGORY_OPENABLE).putExtra(Intent.EXTRA_TITLE, "c3-twin-mtch-diagnostic.txt");
+        try { startActivityForResult(intent, 72); }
+        catch (ActivityNotFoundException e) { Toast.makeText(this, "Gestionnaire de fichiers indisponible", Toast.LENGTH_LONG).show(); }
+    }
+    @Override protected void onActivityResult(int request, int result, Intent data) {
+        super.onActivityResult(request, result, data);
+        if (request == 72 && result == RESULT_OK && data != null && data.getData() != null && pendingDiagnostic != null) {
+            try (java.io.OutputStream stream = getContentResolver().openOutputStream(data.getData())) {
+                stream.write(pendingDiagnostic.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                Toast.makeText(this, "Diagnostic enregistré. Vérifie son contenu avant de le partager.", Toast.LENGTH_LONG).show();
+            } catch (Exception e) { Toast.makeText(this, "Export impossible", Toast.LENGTH_LONG).show(); }
+        }
+        if (request == 72) pendingDiagnostic = null;
+    }
 
     @Override
     protected void onCreate(Bundle saved) {
@@ -107,6 +126,7 @@ public class MainActivity extends Activity implements CarData.Listener {
 
     @Override
     protected void onDestroy() {
+        if (signalSetup != null) signalSetup.close();
         car.removeListener(this);
         web.destroy();
         super.onDestroy();
@@ -205,6 +225,17 @@ public class MainActivity extends Activity implements CarData.Listener {
             pageReady = true;
             main.post(() -> push(car.snapshot()));
         }
+
+        @JavascriptInterface
+        public void diagnostics() { main.post(() -> {
+            if (car.isMtc()) {
+                if (signalSetup != null) signalSetup.close();
+                signalSetup = new SignalSetup(MainActivity.this, car.mtcSignals()); signalSetup.show();
+            }
+            else new AlertDialog.Builder(MainActivity.this).setTitle("Données QF")
+                .setMessage("Service QF détecté : intégration habituelle active. L’analyse MTCH reste désactivée.")
+                .setPositiveButton("Fermer", null).show();
+        }); }
 
         @JavascriptInterface
         public void openCarplay() { main.post(() -> open(ZLINK)); }

@@ -34,6 +34,27 @@ Le dépôt et l’APK contiennent uniquement le modèle final allégé.*
 
 </details>
 
+## Choisir sa version
+
+| Version | Pour quel usage ? | Télécharger |
+|---|---|---|
+| **Stable QF — v0.22.0** | Montage QF/Jitu de référence, données validées sur notre C3 II | [APK stable](https://github.com/DabiK/c3-twin/releases/download/v0.22.0/C3Twin.apk) |
+| **Expérimentale MTCH — v0.24.0-mtch.1** | Analyse locale des signaux sur un autre autoradio ; **pas encore validée sur MTCH réel** | [APK expérimentale](https://github.com/DabiK/c3-twin/releases/download/v0.24.0-mtch.1/C3Twin-MTCH-experimental.apk) |
+
+La version expérimentale conserve le chemin QF et ajoute un écran **Signaux** :
+observation → association d’un signal → aperçu → **validation explicite**. Le profil
+accepté persiste après redémarrage et mise à jour ; les valeurs instantanées sont
+relues. Un export texte permet de transmettre un diagnostic si aucun signal n’est reçu.
+Elle adapte aussi le dashboard à la taille disponible : cartes lisibles, menu
+horizontal défilant si nécessaire et disposition portrait.
+
+Installer par-dessus l’application existante, **sans la désinstaller**. Les deux APK
+utilisent le même identifiant et le même certificat ; elles ne s’installent pas côte
+à côte. Revenir à une version plus ancienne peut être refusé par Android : ne pas
+effacer les données pour contourner cela sans sauvegarde du profil.
+
+[Guide de l’APK expérimentale](docs/mtch-experimental.md) · [Sources techniques MTCH](docs/recherche-mtch.md)
+
 ## Installer l’APK
 
 1. Télécharger **[C3Twin.apk depuis la dernière release](https://github.com/DabiK/c3-twin/releases/latest)**.
